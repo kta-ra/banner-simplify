@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<meta charset="UTF-8">
+<title>banner simplify</title>
+<script type="text/javascript">
+    window.onload = function() {
+        document.getElementById('actionForm').addEventListener('submit', commitForm);
+        var htmlFile = null;
+        var jsFile = null;
+        var pngFile = null;
+        var htmlContent = null;
+        var jsContent = null;
+    }
+    
+    function commitForm(event) {
+        event.preventDefault();
+        loadFiles();
+    }
+    
+    function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
+    
+    function fileUploaded() {
+        jsContent = '<script type="text/javascript">' + jsContent + '<\/script>';
+        htmlContent = htmlContent.replace('<script src="' + jsFile.name + '"><\/script>', jsContent);
+        download(htmlFile.name, htmlContent);
+    }
+    
+    function loadFiles() {
+        loadHtml();
+    }
+    
+    function loadHtml() {
+        htmlFile = document.getElementById("html").files[0];
+        let reader = new FileReader();
+        reader.readAsText(htmlFile);
+        reader.onload = function() {
+            htmlContent = reader.result;
+            loadJs();
+        };
+
+        reader.onerror = function() {
+            alert("Ошибка " + reader.error);
+        };
+    }
+    
+    function loadJs() {
+        jsFile = document.getElementById("js").files[0];
+        let reader = new FileReader();
+        reader.readAsText(jsFile);
+        reader.onload = function() {
+            jsContent = reader.result;
+            loadPng();
+        };
+
+        reader.onerror = function() {
+            alert("Ошибка " + reader.error);
+        };
+    }
+    
+    function loadPng() {
+        let files = document.getElementById("png").files;
+        let n = 0;
+        let loaded = 0;
+        for (n; n < files.length; n++) {
+            let reader = new FileReader();
+            let pngFile = files[n];
+            if (pngFile instanceof File) {
+                reader.readAsDataURL(pngFile);
+                reader.onload = function() {
+                    jsContent = jsContent.replace('src:"' + pngFile.name + '"', 'type:"image",src:"' + reader.result + '"');
+                    loaded++;
+                    if (loaded == files.length){
+                        fileUploaded();
+                    }
+                };
+                
+                reader.onerror = function() {
+                    alert("Ошибка " + reader.error);
+                };
+            }
+       }       
+       
+    }
+</script>
+    <form id="actionForm" onsubmit="commitForm">
+        <p><label>html
+            <input type="file" id="html" required>
+        </label></p>
+        <p><label>js
+            <input type="file" id="js" required>
+        </label></p>
+        <p><label>png
+            <input type="file" id="png" multiple>
+        </label></p>
+        <p><input type="submit" value="OK"></p>
+    </form>
+</body>
+</html>
